@@ -239,8 +239,8 @@ async def main() -> None:
     )
 
     uv = ensure_tool("uv", "Python 侧经 uv 运行（https://docs.astral.sh/uv/）。")
+    pnpm = ensure_tool("pnpm", "webui 需要 pnpm >= 9（https://pnpm.io/installation）。")
     if not args.no_webui:
-        ensure_tool("pnpm", "webui 需要 pnpm >= 9（https://pnpm.io/installation）。")
         ensure_node_version()
         if not WEBUI_PACKAGE_DIR.is_dir():
             raise RuntimeError(f"observer-web 包不存在：{WEBUI_PACKAGE_DIR}")
@@ -275,7 +275,7 @@ async def main() -> None:
         if not args.no_webui:
             webui_env_path = write_webui_env(f"ws://{args.host}:{args.subject_port}/ws")
             webui = spawn(
-                ["pnpm", "dev", "--port", str(args.webui_port), "--strictPort"],
+                [pnpm, "dev", "--port", str(args.webui_port), "--strictPort"],
                 cwd=WEBUI_PACKAGE_DIR,
             )
             procs.append(("WebUI", webui))

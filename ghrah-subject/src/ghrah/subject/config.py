@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
-from dataclasses import InitVar, dataclass, field
+from dataclasses import InitVar, dataclass, field, replace
 from pathlib import Path
 
 from ghrah.protocol.types import RecoveryAction
@@ -262,14 +262,18 @@ class SubjectConfig:
         self._manifest = manifest_slice or ManifestConfig(manifest_root=self.manifest_root)
         self._hitl = hitl_slice or self.hitl_policy
         # project slice：bootstrap_workspace_locator 为空时派生自 sandbox.workspace_root
-        # + "/projects/default"（flat 兼容真相）。
-        self._project = project_slice or ProjectConfig(
-            bootstrap_workspace_locator=(
-                ""
-                if not self._sandbox.workspace_root
-                else self._sandbox.workspace_root.rstrip("/") + "/projects/default"
-            ),
-        )
+        # + "/projects/default"（flat 兼容真相）。注意显式传入的 slice（如 from_env）
+        # 若 locator 为空，同样回退派生——不能因 slice 非 None 就跳过。
+        self._project = project_slice or ProjectConfig()
+        if not self._project.bootstrap_workspace_locator:
+            self._project = replace(
+                self._project,
+                bootstrap_workspace_locator=(
+                    ""
+                    if not self._sandbox.workspace_root
+                    else self._sandbox.workspace_root.rstrip("/") + "/projects/default"
+                ),
+            )
         self._recovery = recovery_slice or RecoveryConfig()
         self._room_filter = room_filter_slice or RoomFilterConfig()
 
